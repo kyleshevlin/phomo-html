@@ -1,9 +1,11 @@
 import babel from 'rollup-plugin-babel'
 import commonjs from 'rollup-plugin-commonjs'
 import filesize from 'rollup-plugin-filesize'
+import json from 'rollup-plugin-json'
 import resolve from 'rollup-plugin-node-resolve'
+import uglify from 'rollup-plugin-uglify'
 
-function configFactory(dest, format) {
+function configFactory(dest, format, isUgly = false) {
   return {
     input: 'src/index.js',
     output: {
@@ -14,8 +16,11 @@ function configFactory(dest, format) {
       sourcemap: true
     },
     plugins: [
-      resolve(),
+      resolve({
+        extensions: ['.js', '.json']
+      }),
       commonjs(),
+      json(),
       babel({
         babelrc: false,
         presets: [
@@ -26,9 +31,10 @@ function configFactory(dest, format) {
             }
           ]
         ],
-        plugins: ['external-helpers'],
+        plugins: ['codegen', 'external-helpers'],
         exclude: 'node_modules/**'
       }),
+      isUgly && uglify(),
       filesize()
     ]
   }
@@ -36,7 +42,7 @@ function configFactory(dest, format) {
 
 const config = [
   configFactory('dist/phomo-html.js', 'cjs'),
-  configFactory('dist/phomo-html.umd.js', 'umd'),
+  configFactory('dist/phomo-html.umd.js', 'umd', true),
   configFactory('dist/phomo-html.module.js', 'es')
 ]
 
